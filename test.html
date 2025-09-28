@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>棋盘显示测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #gameBoard {
+            border: 2px solid #d4af37;
+            background: #2d2d2d;
+        }
+        .test-info {
+            margin-top: 20px;
+            padding: 10px;
+            background: #333;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>棋盘显示测试</h1>
+    <canvas id="gameBoard" width="450" height="450"></canvas>
+    <div class="test-info">
+        <p>如果棋盘正常显示，说明重构成功！</p>
+        <p>如果棋盘不显示，请检查控制台错误信息。</p>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        // 简单的测试脚本
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('测试页面加载完成');
+            
+            // 等待游戏初始化
+            setTimeout(() => {
+                if (window.gameManager) {
+                    console.log('游戏管理器已创建');
+                    console.log('游戏状态:', window.gameManager.gameState);
+                } else {
+                    console.error('游戏管理器未创建');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

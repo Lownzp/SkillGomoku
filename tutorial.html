@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏教程 - 五子棋技能系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500;700&family=ZCOOL+KuaiLe&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink-black: #1a1a1a;
+            --paper-white: #faf9f6;
+            --bamboo-green: #2d5016;
+            --cinnabar-red: #b22222;
+            --gold-accent: #d4af37;
+            --shadow-gray: #4a4a4a;
+            --mist-blue: #6b7d8c;
+            --warm-ivory: #f7f5f0;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, var(--paper-white) 0%, #f0ede8 100%);
+            color: var(--ink-black);
+            min-height: 100vh;
+        }
+        
+        .title-font {
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+        
+        .skill-font {
+            font-family: 'ZCOOL XiaoWei', serif;
+        }
+        
+        .game-title {
+            background: linear-gradient(45deg, var(--gold-accent), #b8860b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tutorial-card {
+            background: var(--warm-ivory);
+            border: 2px solid var(--bamboo-green);
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .tutorial-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        
+        .step-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-accent), #b8860b);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto 16px;
+        }
+        
+        .demo-board {
+            background: linear-gradient(45deg, #8b7355 0%, #a0845c 100%);
+            border: 4px solid var(--ink-black);
+            border-radius: 8px;
+            position: relative;
+            margin: 0 auto;
+        }
+        
+        .demo-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--ink-black);
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .demo-piece {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .demo-piece.black {
+            background: radial-gradient(circle at 30% 30%, #333, #000);
+            border: 1px solid #333;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .demo-piece.white {
+            background: radial-gradient(circle at 30% 30%, #fff, #e8e8e8);
+            border: 1px solid #ccc;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .skill-demo {
+            background: white;
+            border: 2px solid var(--gold-accent);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        .skill-icon-demo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--gold-accent), #b8860b);
+            border: 2px solid var(--ink-black);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 12px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--bamboo-green), var(--gold-accent));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            border-color: var(--bamboo-green);
+            background: #f9fafb;
+        }
+        
+        .quiz-option.correct {
+            border-color: var(--bamboo-green);
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        }
+        
+        .quiz-option.incorrect {
+            border-color: var(--cinnabar-red);
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 32px;
+        }
+        
+        .nav-button {
+            background: linear-gradient(135deg, var(--bamboo-green), #3d6b1e);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .nav-button.secondary {
+            background: linear-gradient(135deg, var(--mist-blue), #5a6b7a);
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+            color: var(--bamboo-green);
+        }
+        
+        .highlight-text {
+            background: linear-gradient(135deg, var(--gold-accent), #b8860b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+        
+        .interactive-demo {
+            background: var(--warm-ivory);
+            border: 2px solid var(--gold-accent);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .demo-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .demo-button {
+            background: var(--bamboo-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .demo-button:hover {
+            background: #3d6b1e;
+            transform: translateY(-1px);
+        }
+        
+        .tutorial-progress {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            border: 2px solid var(--bamboo-green);
+            border-radius: 12px;
+            padding: 16px;
+            width: 200px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .tutorial-progress {
+                position: relative;
+                top: auto;
+                right: auto;
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            
+            .demo-board {
+                width: 270px;
+                height: 270px;
+            }
+            
+            .demo-cell {
+                width: 18px;
+                height: 18px;
+            }
+            
+            .demo-piece {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg border-b-2 border-bamboo-green">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold title-font game-title">五子棋·技能系统</h1>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="index.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-bamboo-green hover:bg-gray-100">游戏对战</a>
+                    <a href="custom-skills.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-bamboo-green hover:bg-gray-100">技能自定义</a>
+                    <a href="tutorial.html" class="px-3 py-2 rounded-md text-sm font-medium text-white bg-bamboo-green">游戏教程</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <h2 class="text-4xl font-bold title-font mb-4">游戏教程</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                从零开始学习五子棋技能系统，掌握基础规则，了解各种技能的使用方法，成为策略大师！
+            </p>
+        </div>
+
+        <!-- 学习进度 -->
+        <div class="tutorial-progress">
+            <h4 class="font-bold mb-3">学习进度</h4>
+            <div class="progress-bar">
+                <div class="progress-fill" id="tutorialProgress" style="width: 0%"></div>
+            </div>
+            <div class="text-sm text-gray-600 mt-2">
+                <span id="currentStep">0</span> / <span id="totalSteps">8</span> 完成
+            </div>
+            <div class="text-xs text-gray-500 mt-1" id="currentSection">
+                准备开始学习
+            </div>
+        </div>
+
+        <!-- 教程内容 -->
+        <div class="space-y-8">
+            
+            <!-- 第1章：基础规则 -->
+            <div class="tutorial-card p-8" id="chapter1">
+                <div class="step-indicator">1</div>
+                <h3 class="section-title">五子棋基础规则</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">游戏目标</h4>
+                        <p class="text-gray-700 mb-4">
+                            五子棋是一种古老的策略棋类游戏，两名玩家轮流在棋盘上放置棋子，
+                            <span class="highlight-text">率先在任意方向（横、竖、斜）连成五子者获胜</span>。
+                        </p>
+                        
+                        <h4 class="text-xl font-bold mb-4">棋盘介绍</h4>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li>标准棋盘为 <strong>15×15</strong> 的正方形网格</li>
+                            <li>共有 225 个交叉点，棋子放置在交叉点上</li>
+                            <li>棋盘中心点称为"天元"，是重要的战略位置</li>
+                            <li>黑方先行，双方轮流落子，每次只能下一子</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">胜利条件</h4>
+                        <div class="interactive-demo">
+                            <div class="demo-board mx-auto mb-4" style="width: 240px; height: 240px;">
+                                <div class="grid grid-cols-8 grid-rows-8 h-full">
+                                    <!-- 通过JavaScript生成棋盘格子 -->
+                                </div>
+                            </div>
+                            <div class="demo-controls">
+                                <button class="demo-button" onclick="demoVictoryCondition()">演示胜利条件</button>
+                                <button class="demo-button" onclick="clearDemoBoard()">清除棋盘</button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                            <h5 class="font-bold text-blue-800 mb-2">💡 小贴士</h5>
+                            <p class="text-blue-700 text-sm">
+                                在技能系统中，胜利条件保持不变，但技能的使用可能会改变棋局走向，
+                                创造更多获胜机会！
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第2章：技能系统概述 -->
+            <div class="tutorial-card p-8" id="chapter2">
+                <div class="step-indicator">2</div>
+                <h3 class="section-title">技能系统介绍</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="skill-demo text-center">
+                        <div class="skill-icon-demo">⚡</div>
+                        <h4 class="font-bold mb-2">能量系统</h4>
+                        <p class="text-sm text-gray-600">
+                            每方初始拥有3点能量，每回合恢复1点，使用技能需要消耗能量。
+                        </p>
+                    </div>
+                    
+                    <div class="skill-demo text-center">
+                        <div class="skill-icon-demo">❄️</div>
+                        <h4 class="font-bold mb-2">冷却机制</h4>
+                        <p class="text-sm text-gray-600">
+                            技能使用后需要冷却一定回合，不同技能的冷却时间各不相同。
+                        </p>
+                    </div>
+                    
+                    <div class="skill-demo text-center">
+                        <div class="skill-icon-demo">🎯</div>
+                        <h4 class="font-bold mb-2">策略组合</h4>
+                        <p class="text-sm text-gray-600">
+                            8种不同技能可以组合使用，创造出无限可能的战术策略。
+                        </p>
+                    </div>
+                    
+                    <div class="skill-demo text-center">
+                        <div class="skill-icon-demo">🎨</div>
+                        <h4 class="font-bold mb-2">自定义技能</h4>
+                        <p class="text-sm text-gray-600">
+                            使用技能工坊创建属于自己的独特技能，发挥创意。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
+                    <h5 class="font-bold text-yellow-800 mb-2">🎯 核心理念</h5>
+                    <p class="text-yellow-700">
+                        技能系统的设计初衷是在保持五子棋核心策略性的基础上，增加更多变化和趣味性。
+                        每个技能都经过精心平衡，确保不会破坏游戏的公平性。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 第3章：技能详解 - 攻击类 -->
+            <div class="tutorial-card p-8" id="chapter3">
+                <div class="step-indicator">3</div>
+                <h3 class="section-title">攻击类技能</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-xl font-bold mb-4 skill-font">飞沙走石</h4>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-red-800">移除敌方棋子</span>
+                                <span class="text-sm text-red-600">消耗: 2⚡ 冷却: 3回合</span>
+                            </div>
+                            <p class="text-red-700 text-sm">
+                                选择对手场上的任意一颗棋子并将其移除。适合用来破坏对方的连线或关键位置。
+                            </p>
+                        </div>
+                        
+                        <h4 class="text-xl font-bold mb-4 skill-font">釜底抽薪</h4>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-red-800">移除最近棋子</span>
+                                <span class="text-sm text-red-600">消耗: 3⚡ 冷却: 5回合</span>
+                            </div>
+                            <p class="text-red-700 text-sm">
+                                移除对手最近放置的3颗棋子。适合应对对手的连续攻势。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">使用技巧</h4>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li><strong>时机选择</strong>：在对手即将形成五连时使用效果最佳</li>
+                            <li><strong>位置判断</strong>：优先移除对手的关键连接点</li>
+                            <li><strong>组合使用</strong>：配合其他技能创造更有利的局面</li>
+                            <li><strong>心理博弈</strong>：适时使用可以打乱对手节奏</li>
+                        </ul>
+                        
+                        <div class="interactive-demo mt-6">
+                            <h5 class="font-bold mb-3">攻击技能演示</h5>
+                            <div class="demo-board mx-auto mb-4" style="width: 180px; height: 180px;">
+                                <div class="grid grid-cols-6 grid-rows-6 h-full" id="attackDemoBoard">
+                                    <!-- 通过JavaScript生成 -->
+                                </div>
+                            </div>
+                            <div class="demo-controls">
+                                <button class="demo-button" onclick="demoAttackSkill()">演示攻击技能</button>
+                                <button class="demo-button" onclick="resetAttackDemo()">重置演示</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第4章：技能详解 - 控制类 -->
+            <div class="tutorial-card p-8" id="chapter4">
+                <div class="step-indicator">4</div>
+                <h3 class="section-title">控制类技能</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-xl font-bold mb-4 skill-font">时光冻结</h4>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-blue-800">跳过对方回合</span>
+                                <span class="text-sm text-blue-600">消耗: 2⚡ 冷却: 4回合</span>
+                            </div>
+                            <p class="text-blue-700 text-sm">
+                                使对手跳过下一回合，你可以连续行动两次。适合在关键时刻获得主动权。
+                            </p>
+                        </div>
+                        
+                        <h4 class="text-xl font-bold mb-4 skill-font">画地为牢</h4>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-blue-800">创建禁止区域</span>
+                                <span class="text-sm text-blue-600">消耗: 2⚡ 冷却: 4回合</span>
+                            </div>
+                            <p class="text-blue-700 text-sm">
+                                指定一个3x3区域，对手2回合内不能在区域内落子。适合限制对手的活动空间。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">战术应用</h4>
+                        <div class="space-y-4">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                <h5 class="font-bold text-green-800 mb-1">连续攻势</h5>
+                                <p class="text-green-700 text-sm">
+                                    使用时光冻结后可以连续落子，快速形成攻势或完成连线。
+                                </p>
+                            </div>
+                            
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                <h5 class="font-bold text-purple-800 mb-1">空间控制</h5>
+                                <p class="text-purple-700 text-sm">
+                                    画地为牢可以限制对手的活动范围，迫使其进入你设下的陷阱。
+                                </p>
+                            </div>
+                            
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                <h5 class="font-bold text-orange-800 mb-1">心理压力</h5>
+                                <p class="text-orange-700 text-sm">
+                                    控制类技能会给对手造成心理压力，影响其判断和决策。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第5章：技能详解 - 防御与特殊 -->
+            <div class="tutorial-card p-8" id="chapter5">
+                <div class="step-indicator">5</div>
+                <h3 class="section-title">防御与特殊技能</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="skill-demo">
+                        <h4 class="text-lg font-bold mb-3 skill-font text-center">固若金汤</h4>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="text-center mb-2">
+                                <span class="text-2xl">🛡️</span>
+                            </div>
+                            <div class="text-xs text-center text-green-600 mb-2">
+                                消耗: 1⚡ 冷却: 3回合
+                            </div>
+                            <p class="text-green-700 text-sm text-center">
+                                使我方已存在的棋子2回合内不可被移除，有效防止对手的攻击技能。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-demo">
+                        <h4 class="text-lg font-bold mb-3 skill-font text-center">移花接木</h4>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="text-center mb-2">
+                                <span class="text-2xl">🌸</span>
+                            </div>
+                            <div class="text-xs text-center text-yellow-600 mb-2">
+                                消耗: 1⚡ 冷却: 2回合
+                            </div>
+                            <p class="text-yellow-700 text-sm text-center">
+                                将我方一颗棋子移动到相邻空位，灵活调整布局，化解危机。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-demo">
+                        <h4 class="text-lg font-bold mb-3 skill-font text-center">时光倒流</h4>
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                            <div class="text-center mb-2">
+                                <span class="text-2xl">⏰</span>
+                            </div>
+                            <div class="text-xs text-center text-purple-600 mb-2">
+                                消耗: 3⚡ 冷却: 5回合
+                            </div>
+                            <p class="text-purple-700 text-sm text-center">
+                                撤销对手上一步的落子操作，逆转不利局面，重新获得优势。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8">
+                    <h4 class="text-xl font-bold mb-4">特殊技能：力拔山兮</h4>
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <span class="text-3xl mr-3">🏔️</span>
+                                <div>
+                                    <h5 class="font-bold text-red-800">力拔山兮</h5>
+                                    <p class="text-red-600 text-sm">随机打乱场上所有棋子位置</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-red-600">消耗: 4⚡</div>
+                                <div class="text-sm text-red-600">冷却: 7回合</div>
+                            </div>
+                        </div>
+                        <p class="text-red-700">
+                            这是最强力的技能，会完全改变棋盘局面。使用时需要慎重考虑，
+                            可能在劣势时扭转乾坤，也可能破坏自己的优势局面。
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第6章：实战策略 -->
+            <div class="tutorial-card p-8" id="chapter6">
+                <div class="step-indicator">6</div>
+                <h3 class="section-title">实战策略指南</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">开局策略</h4>
+                        <div class="space-y-3">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <h5 class="font-bold text-blue-800">抢占中心</h5>
+                                <p class="text-blue-700 text-sm">
+                                    优先占据棋盘中心位置，为后续发展创造更多可能性。
+                                </p>
+                            </div>
+                            
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                <h5 class="font-bold text-green-800">能量管理</h5>
+                                <p class="text-green-700 text-sm">
+                                    前期合理使用能量，为中后期的技能组合留足余地。
+                                </p>
+                            </div>
+                            
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                <h5 class="font-bold text-purple-800">观察对手</h5>
+                                <p class="text-purple-700 text-sm">
+                                    注意对手的技能使用习惯，预判其可能的行动。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">中局技巧</h4>
+                        <div class="space-y-3">
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                <h5 class="font-bold text-yellow-800">技能组合</h5>
+                                <p class="text-yellow-700 text-sm">
+                                    学会组合使用不同技能，创造更强大的效果。
+                                </p>
+                            </div>
+                            
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                                <h5 class="font-bold text-red-800">时机把握</h5>
+                                <p class="text-red-700 text-sm">
+                                    在关键时刻使用技能，最大化技能的价值。
+                                </p>
+                            </div>
+                            
+                            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                                <h5 class="font-bold text-indigo-800">心理战术</h5>
+                                <p class="text-indigo-700 text-sm">
+                                    利用技能制造假象，诱导对手做出错误判断。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8">
+                    <h4 class="text-xl font-bold mb-4">经典组合技</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg p-4">
+                            <h5 class="font-bold text-red-800 mb-2">攻势组合</h5>
+                            <p class="text-red-700 text-sm mb-2">
+                                <strong>时光冻结 → 连续落子 → 飞沙走石</strong>
+                            </p>
+                            <p class="text-red-600 text-xs">
+                                先冻结对手回合，连续落子形成攻势，最后用飞沙走石清除关键棋子。
+                            </p>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                            <h5 class="font-bold text-blue-800 mb-2">防御反击</h5>
+                            <p class="text-blue-700 text-sm mb-2">
+                                <strong>固若金汤 → 画地为牢 → 时光倒流</strong>
+                            </p>
+                            <p class="text-blue-600 text-xs">
+                                先保护己方棋子，限制对手行动，最后撤销对手的攻击。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第7章：技能自定义 -->
+            <div class="tutorial-card p-8" id="chapter7">
+                <div class="step-indicator">7</div>
+                <h3 class="section-title">技能自定义工坊</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">创建流程</h4>
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-bamboo-green text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                                <div>
+                                    <h5 class="font-bold">命名技能</h5>
+                                    <p class="text-sm text-gray-600">使用四字成语命名，要求与技能效果相关</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-bamboo-green text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                                <div>
+                                    <h5 class="font-bold">选择效果</h5>
+                                    <p class="text-sm text-gray-600">从多种效果中选择，可以组合多个效果</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-bamboo-green text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                                <div>
+                                    <h5 class="font-bold">调整参数</h5>
+                                    <p class="text-sm text-gray-600">设置能量消耗和冷却时间，平衡技能强度</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 bg-bamboo-green text-white rounded-full flex items-center justify-center text-sm font-bold">4</div>
+                                <div>
+                                    <h5 class="font-bold">测试发布</h5>
+                                    <p class="text-sm text-gray-600">预览效果，测试平衡性，最后保存使用</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">设计原则</h4>
+                        <div class="space-y-3">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                <h5 class="font-bold text-green-800 mb-1">平衡性</h5>
+                                <p class="text-green-700 text-sm">
+                                    技能强度要与消耗相匹配，避免过于强大或弱小。
+                                </p>
+                            </div>
+                            
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <h5 class="font-bold text-blue-800 mb-1">创新性</h5>
+                                <p class="text-blue-700 text-sm">
+                                    鼓励创造新颖的技能效果，丰富游戏体验。
+                                </p>
+                            </div>
+                            
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                <h5 class="font-bold text-purple-800 mb-1">文化性</h5>
+                                <p class="text-purple-700 text-sm">
+                                    使用成语命名，体现中华文化的深厚底蕴。
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <button class="nav-button w-full" onclick="window.location.href='custom-skills.html'">
+                                开始创建技能
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第8章：知识测验 -->
+            <div class="tutorial-card p-8" id="chapter8">
+                <div class="step-indicator">8</div>
+                <h3 class="section-title">知识测验</h3>
+                
+                <div class="max-w-2xl mx-auto">
+                    <div id="quiz-container">
+                        <!-- 测验题目将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <div class="text-center mt-8">
+                        <div id="quiz-result" class="hidden">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-4">
+                                <h4 class="text-xl font-bold text-green-800 mb-2">🎉 恭喜完成教程！</h4>
+                                <p class="text-green-700" id="result-message"></p>
+                            </div>
+                            <button class="nav-button" onclick="window.location.href='index.html'">
+                                开始游戏
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 导航按钮 -->
+        <div class="navigation-buttons">
+            <button class="nav-button secondary" id="prevButton" onclick="previousStep()" disabled>
+                上一步
+            </button>
+            <button class="nav-button" id="nextButton" onclick="nextStep()">
+                下一步
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 教程系统
+        class TutorialSystem {
+            constructor() {
+                this.currentStep = 0;
+                this.totalSteps = 8;
+                this.completedSteps = new Set();
+                this.quizQuestions = [
+                    {
+                        question: "五子棋的获胜条件是什么？",
+                        options: [
+                            "连成四子即可获胜",
+                            "在任意方向连成五子获胜",
+                            "吃掉对方10颗棋子",
+                            "占据棋盘中心点"
+                        ],
+                        correct: 1,
+                        explanation: "五子棋的规则是在横、竖、斜任意方向连成五子即可获胜。"
+                    },
+                    {
+                        question: "使用技能需要消耗什么？",
+                        options: [
+                            "金币",
+                            "积分",
+                            "能量",
+                            "时间"
+                        ],
+                        correct: 2,
+                        explanation: "游戏中的技能系统使用能量作为消耗资源，每方初始拥有3点能量。"
+                    },
+                    {
+                        question: "'飞沙走石'技能的效果是？",
+                        options: [
+                            "跳过对方回合",
+                            "移除任意一颗敌方棋子",
+                            "保护我方棋子",
+                            "打乱棋盘"
+                        ],
+                        correct: 1,
+                        explanation: "飞沙走石可以移除对手场上任意一颗棋子，是很好的攻击技能。"
+                    },
+                    {
+                        question: "技能使用后需要等待多久才能再次使用？",
+                        options: [
+                            "立即可以再次使用",
+                            "需要冷却一定回合",
+                            "整局游戏只能使用一次",
+                            "需要重新购买"
+                        ],
+                        correct: 1,
+                        explanation: "每个技能使用后都有冷却时间，不同技能的冷却时间各不相同。"
+                    },
+                    {
+                        question: "自定义技能时，技能名称应该使用什么格式？",
+                        options: [
+                            "任意英文单词",
+                            "两个汉字",
+                            "四字成语",
+                            "数字编号"
+                        ],
+                        correct: 2,
+                        explanation: "为了保持游戏的文化特色，自定义技能必须使用四字成语命名。"
+                    }
+                ];
+                this.currentQuiz = 0;
+                this.quizScore = 0;
+                this.initializeDemoBoards();
+                this.updateProgress();
+            }
+            
+            initializeDemoBoards() {
+                // 初始化胜利条件演示棋盘
+                const victoryBoard = document.querySelector('#chapter1 .demo-board .grid');
+                if (victoryBoard) {
+                    this.createDemoBoard(victoryBoard, 8);
+                }
+                
+                // 初始化攻击技能演示棋盘
+                const attackBoard = document.getElementById('attackDemoBoard');
+                if (attackBoard) {
+                    this.createDemoBoard(attackBoard, 6);
+                }
+            }
+            
+            createDemoBoard(container, size) {
+                container.innerHTML = '';
+                for (let i = 0; i < size * size; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'demo-cell';
+                    cell.dataset.row = Math.floor(i / size);
+                    cell.dataset.col = i % size;
+                    container.appendChild(cell);
+                }
+            }
+            
+            nextStep() {
+                if (this.currentStep < this.totalSteps - 1) {
+                    this.currentStep++;
+                    this.completedSteps.add(this.currentStep - 1);
+                    this.updateProgress();
+                    this.updateNavigation();
+                    
+                    // 如果是测验步骤，开始测验
+                    if (this.currentStep === 7) {
+                        this.startQuiz();
+                    }
+                }
+            }
+            
+            previousStep() {
+                if (this.currentStep > 0) {
+                    this.currentStep--;
+                    this.updateProgress();
+                    this.updateNavigation();
+                }
+            }
+            
+            updateProgress() {
+                const progress = (this.currentStep / this.totalSteps) * 100;
+                document.getElementById('tutorialProgress').style.width = `${progress}%`;
+                document.getElementById('currentStep').textContent = this.currentStep;
+                document.getElementById('totalSteps').textContent = this.totalSteps;
+                
+                const sections = [
+                    '准备开始学习',
+                    '基础规则学习',
+                    '技能系统介绍',
+                    '攻击类技能详解',
+                    '控制类技能详解',
+                    '防御与特殊技能',
+                    '实战策略指南',
+                    '技能自定义工坊',
+                    '知识测验'
+                ];
+                
+                document.getElementById('currentSection').textContent = sections[this.currentStep];
+            }
+            
+            updateNavigation() {
+                const prevButton = document.getElementById('prevButton');
+                const nextButton = document.getElementById('nextButton');
+                
+                prevButton.disabled = this.currentStep === 0;
+                
+                if (this.currentStep === this.totalSteps - 1) {
+                    nextButton.style.display = 'none';
+                } else {
+                    nextButton.style.display = 'block';
+                }
+            }
+            
+            startQuiz() {
+                this.currentQuiz = 0;
+                this.quizScore = 0;
+                this.showQuizQuestion();
+            }
+            
+            showQuizQuestion() {
+                if (this.currentQuiz >= this.quizQuestions.length) {
+                    this.showQuizResult();
+                    return;
+                }
+                
+                const question = this.quizQuestions[this.currentQuiz];
+                const container = document.getElementById('quiz-container');
+                
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 shadow-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-bold">题目 ${this.currentQuiz + 1} / ${this.quizQuestions.length}</h4>
+                            <div class="text-sm text-gray-500">得分: ${this.quizScore} / ${this.currentQuiz}</div>
+                        </div>
+                        <h5 class="text-xl font-bold mb-6">${question.question}</h5>
+                        <div class="space-y-3">
+                            ${question.options.map((option, index) => `
+                                <div class="quiz-option" onclick="tutorialSystem.selectAnswer(${index})">
+                                    <span class="font-bold mr-3">${String.fromCharCode(65 + index)}.</span>
+                                    ${option}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            selectAnswer(selectedIndex) {
+                const question = this.quizQuestions[this.currentQuiz];
+                const options = document.querySelectorAll('.quiz-option');
+                
+                // 显示答案结果
+                options.forEach((option, index) => {
+                    option.style.pointerEvents = 'none';
+                    if (index === question.correct) {
+                        option.classList.add('correct');
+                    } else if (index === selectedIndex && index !== question.correct) {
+                        option.classList.add('incorrect');
+                    }
+                });
+                
+                // 更新分数
+                if (selectedIndex === question.correct) {
+                    this.quizScore++;
+                }
+                
+                // 显示解释
+                setTimeout(() => {
+                    const container = document.getElementById('quiz-container');
+                    const explanation = document.createElement('div');
+                    explanation.className = 'mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg';
+                    explanation.innerHTML = `
+                        <h6 class="font-bold text-blue-800 mb-2">解释</h6>
+                        <p class="text-blue-700">${question.explanation}</p>
+                    `;
+                    container.querySelector('.bg-white').appendChild(explanation);
+                    
+                    // 添加下一题按钮
+                    const nextButton = document.createElement('button');
+                    nextButton.className = 'nav-button mt-4';
+                    nextButton.textContent = this.currentQuiz < this.quizQuestions.length - 1 ? '下一题' : '查看结果';
+                    nextButton.onclick = () => {
+                        this.currentQuiz++;
+                        this.showQuizQuestion();
+                    };
+                    container.querySelector('.bg-white').appendChild(nextButton);
+                }, 1500);
+            }
+            
+            showQuizResult() {
+                const container = document.getElementById('quiz-container');
+                const resultDiv = document.getElementById('quiz-result');
+                
+                container.innerHTML = '';
+                
+                const percentage = (this.quizScore / this.quizQuestions.length) * 100;
+                let message = '';
+                let grade = '';
+                
+                if (percentage >= 90) {
+                    grade = '🏆 优秀';
+                    message = '太棒了！你已经完全掌握了游戏的核心内容，可以去挑战高手了！';
+                } else if (percentage >= 70) {
+                    grade = '🥈 良好';
+                    message = '很不错！基本掌握了游戏规则，再多练习几次就能成为高手。';
+                } else if (percentage >= 60) {
+                    grade = '🥉 及格';
+                    message = '还需要继续学习，建议重新阅读前面的教程内容。';
+                } else {
+                    grade = '📚 需加强';
+                    message = '建议重新学习教程，掌握基础知识后再进行游戏。';
+                }
+                
+                document.getElementById('result-message').innerHTML = `
+                    <div class="text-center">
+                        <div class="text-3xl mb-2">${grade}</div>
+                        <div class="text-2xl font-bold mb-2">得分: ${this.quizScore} / ${this.quizQuestions.length} (${percentage}%)</div>
+                        <p class="text-gray-700">${message}</p>
+                    </div>
+                `;
+                
+                resultDiv.classList.remove('hidden');
+                
+                // 完成教程
+                this.completedSteps.add(7);
+                this.updateProgress();
+            }
+        }
+        
+        // 演示函数
+        function demoVictoryCondition() {
+            const board = document.querySelector('#chapter1 .demo-board .grid');
+            const cells = board.querySelectorAll('.demo-cell');
+            
+            // 清除现有棋子
+            cells.forEach(cell => {
+                const existingPiece = cell.querySelector('.demo-piece');
+                if (existingPiece) existingPiece.remove();
+            });
+            
+            // 创建五子连线
+            const winningPositions = [[2,2], [3,3], [4,4], [5,5], [6,6]];
+            winningPositions.forEach(([row, col], index) => {
+                setTimeout(() => {
+                    const cell = board.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    const piece = document.createElement('div');
+                    piece.className = 'demo-piece black';
+                    cell.appendChild(piece);
+                    
+                    // 添加动画
+                    anime({
+                        targets: piece,
+                        scale: [0, 1],
+                        duration: 300,
+                        easing: 'easeOutBack'
+                    });
+                }, index * 200);
+            });
+            
+            // 显示胜利提示
+            setTimeout(() => {
+                alert('🎉 黑方获胜！五子连珠达成！');
+            }, 1200);
+        }
+        
+        function clearDemoBoard() {
+            const boards = document.querySelectorAll('.demo-board .grid');
+            boards.forEach(board => {
+                const pieces = board.querySelectorAll('.demo-piece');
+                pieces.forEach(piece => piece.remove());
+            });
+        }
+        
+        function demoAttackSkill() {
+            const board = document.getElementById('attackDemoBoard');
+            const cells = board.querySelectorAll('.demo-cell');
+            
+            // 清除现有棋子
+            cells.forEach(cell => {
+                const existingPiece = cell.querySelector('.demo-piece');
+                if (existingPiece) existingPiece.remove();
+            });
+            
+            // 设置演示场景
+            const blackPositions = [[1,1], [2,2], [3,3]];
+            const whitePositions = [[1,3], [2,4], [3,5]];
+            
+            blackPositions.forEach(([row, col]) => {
+                const cell = board.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                const piece = document.createElement('div');
+                piece.className = 'demo-piece black';
+                cell.appendChild(piece);
+            });
+            
+            whitePositions.forEach(([row, col]) => {
+                const cell = board.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                const piece = document.createElement('div');
+                piece.className = 'demo-piece white';
+                cell.appendChild(piece);
+            });
+            
+            // 演示飞沙走石效果
+            setTimeout(() => {
+                const targetCell = board.querySelector('[data-row="3"][data-col="3"]');
+                const targetPiece = targetCell.querySelector('.demo-piece');
+                
+                if (targetPiece) {
+                    // 添加移除动画
+                    anime({
+                        targets: targetPiece,
+                        scale: [1, 0],
+                        opacity: [1, 0],
+                        duration: 500,
+                        easing: 'easeInBack',
+                        complete: () => targetPiece.remove()
+                    });
+                    
+                    // 添加粒子效果
+                    const particles = [];
+                    for (let i = 0; i < 8; i++) {
+                        const particle = document.createElement('div');
+                        particle.style.position = 'absolute';
+                        particle.style.width = '4px';
+                        particle.style.height = '4px';
+                        particle.style.backgroundColor = '#d4af37';
+                        particle.style.borderRadius = '50%';
+                        particle.style.left = `${targetCell.offsetLeft + 15}px`;
+                        particle.style.top = `${targetCell.offsetTop + 15}px`;
+                        targetCell.parentElement.appendChild(particle);
+                        particles.push(particle);
+                    }
+                    
+                    particles.forEach((particle, index) => {
+                        anime({
+                            targets: particle,
+                            translateX: (Math.random() - 0.5) * 60,
+                            translateY: (Math.random() - 0.5) * 60,
+                            opacity: [1, 0],
+                            scale: [1, 0],
+                            duration: 800,
+                            delay: index * 50,
+                            complete: () => particle.remove()
+                        });
+                    });
+                }
+                
+                setTimeout(() => {
+                    alert('💥 飞沙走石！成功移除了对手的棋子！');
+                }, 800);
+            }, 1000);
+        }
+        
+        function resetAttackDemo() {
+            const board = document.getElementById('attackDemoBoard');
+            const cells = board.querySelectorAll('.demo-cell');
+            
+            cells.forEach(cell => {
+                const existingPiece = cell.querySelector('.demo-piece');
+                if (existingPiece) existingPiece.remove();
+            });
+        }
+        
+        // 全局变量和函数
+        let tutorialSystem;
+        
+        function nextStep() {
+            tutorialSystem.nextStep();
+        }
+        
+        function previousStep() {
+            tutorialSystem.previousStep();
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            tutorialSystem = new TutorialSystem();
+        });
+    </script>
+</body>
+</html>

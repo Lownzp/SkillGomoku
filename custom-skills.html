@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能自定义 - 五子棋技能系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500;700&family=ZCOOL+KuaiLe&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink-black: #1a1a1a;
+            --paper-white: #faf9f6;
+            --bamboo-green: #2d5016;
+            --cinnabar-red: #b22222;
+            --gold-accent: #d4af37;
+            --shadow-gray: #4a4a4a;
+            --mist-blue: #6b7d8c;
+            --warm-ivory: #f7f5f0;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, var(--paper-white) 0%, #f0ede8 100%);
+            color: var(--ink-black);
+            min-height: 100vh;
+        }
+        
+        .title-font {
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+        
+        .skill-font {
+            font-family: 'ZCOOL XiaoWei', serif;
+        }
+        
+        .game-title {
+            background: linear-gradient(45deg, var(--gold-accent), #b8860b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .creator-panel {
+            background: var(--warm-ivory);
+            border: 2px solid var(--bamboo-green);
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .preview-panel {
+            background: var(--warm-ivory);
+            border: 2px solid var(--gold-accent);
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .skill-card {
+            background: white;
+            border: 2px solid var(--bamboo-green);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .skill-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            border-color: var(--gold-accent);
+        }
+        
+        .skill-card.selected {
+            border-color: var(--gold-accent);
+            background: linear-gradient(135deg, #fff8e1, #f3e5ab);
+        }
+        
+        .form-input {
+            border: 2px solid var(--bamboo-green);
+            border-radius: 8px;
+            padding: 12px;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold-accent);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+        
+        .slider-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gold-accent);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--gold-accent);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .effect-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .effect-option:hover {
+            border-color: var(--bamboo-green);
+            background: #f9fafb;
+        }
+        
+        .effect-option.selected {
+            border-color: var(--gold-accent);
+            background: linear-gradient(135deg, #fff8e1, #f3e5ab);
+        }
+        
+        .balance-meter {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .balance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .preview-canvas {
+            border: 2px solid var(--bamboo-green);
+            border-radius: 8px;
+            background: var(--paper-white);
+        }
+        
+        .action-button {
+            background: linear-gradient(135deg, var(--bamboo-green), #3d6b1e);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        
+        .action-button.secondary {
+            background: linear-gradient(135deg, var(--mist-blue), #5a6b7a);
+        }
+        
+        .action-button.danger {
+            background: linear-gradient(135deg, var(--cinnabar-red), #8b0000);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: var(--warm-ivory);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: var(--shadow-gray);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            color: var(--bamboo-green);
+            border-bottom-color: var(--bamboo-green);
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .creator-panel, .preview-panel {
+                margin-bottom: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg border-b-2 border-bamboo-green">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold title-font game-title">五子棋·技能系统</h1>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="index.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-bamboo-green hover:bg-gray-100">游戏对战</a>
+                    <a href="custom-skills.html" class="px-3 py-2 rounded-md text-sm font-medium text-white bg-bamboo-green">技能自定义</a>
+                    <a href="tutorial.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-bamboo-green hover:bg-gray-100">游戏教程</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <h2 class="text-4xl font-bold title-font mb-4">技能自定义工坊</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                创造属于你自己的技能！使用四字成语命名，设计独特的技能效果，体验无限可能的策略组合。
+            </p>
+        </div>
+
+        <!-- 标签页导航 -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-white rounded-lg shadow-md p-1">
+                <button class="tab-button active" onclick="switchTab('create')">创建技能</button>
+                <button class="tab-button" onclick="switchTab('library')">技能库</button>
+                <button class="tab-button" onclick="switchTab('balance')">平衡测试</button>
+            </div>
+        </div>
+
+        <!-- 创建技能标签页 -->
+        <div id="create-tab" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- 左侧：技能创建表单 -->
+                <div class="creator-panel p-6">
+                    <h3 class="text-2xl font-bold title-font mb-6 text-center">技能创建器</h3>
+                    
+                    <!-- 基本信息 -->
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">技能名称（四字成语）</label>
+                            <input type="text" id="skillName" class="form-input w-full" placeholder="请输入四字成语，如：飞龙在天" maxlength="4">
+                            <div class="text-xs text-gray-500 mt-1">技能名称必须为四字成语，且与技能效果相关</div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">技能描述</label>
+                            <textarea id="skillDescription" class="form-input w-full h-20" placeholder="描述技能的具体效果和使用场景"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">技能类型</label>
+                            <select id="skillType" class="form-input w-full">
+                                <option value="attack">攻击类</option>
+                                <option value="defense">防御类</option>
+                                <option value="control">控制类</option>
+                                <option value="special">特殊类</option>
+                                <option value="chaos">混乱类</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- 技能效果选择 -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">选择技能效果（可多选）</label>
+                        <div class="space-y-2">
+                            <div class="effect-option" data-effect="removePiece">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">移除棋子</div>
+                                        <div class="text-sm text-gray-500">移除场上指定棋子</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="effect-option" data-effect="movePiece">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">移动棋子</div>
+                                        <div class="text-sm text-gray-500">将我方棋子移动到指定位置</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="effect-option" data-effect="skipTurn">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">跳过回合</div>
+                                        <div class="text-sm text-gray-500">使对手跳过下一回合</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="effect-option" data-effect="createBarrier">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">创建障碍</div>
+                                        <div class="text-sm text-gray-500">在指定区域创建禁止落子区域</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="effect-option" data-effect="undoMove">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">撤销操作</div>
+                                        <div class="text-sm text-gray-500">撤销对手上一步操作</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="effect-option" data-effect="shuffleBoard">
+                                <div class="flex items-center">
+                                    <input type="checkbox" class="mr-3">
+                                    <div>
+                                        <div class="font-medium">打乱棋盘</div>
+                                        <div class="text-sm text-gray-500">随机重新排列所有棋子位置</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 平衡参数 -->
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                能量消耗: <span id="energyCostValue">2</span> 点
+                            </label>
+                            <div class="slider-container">
+                                <input type="range" id="energyCost" class="slider" min="1" max="5" value="2">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                冷却时间: <span id="cooldownValue">3</span> 回合
+                            </label>
+                            <div class="slider-container">
+                                <input type="range" id="cooldown" class="slider" min="1" max="8" value="3">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 平衡性评估 -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-gray-700">平衡性评估</span>
+                            <span id="balanceScore" class="text-sm font-bold text-bamboo-green">平衡</span>
+                        </div>
+                        <div class="balance-meter">
+                            <div class="balance-fill" id="balanceBar" style="width: 50%"></div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            根据能量消耗、冷却时间和效果强度计算
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="flex space-x-3">
+                        <button class="action-button flex-1" onclick="previewSkill()">
+                            预览效果
+                        </button>
+                        <button class="action-button secondary flex-1" onclick="testSkill()">
+                            测试平衡
+                        </button>
+                        <button class="action-button flex-1" onclick="saveSkill()">
+                            保存技能
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 右侧：技能预览 -->
+                <div class="preview-panel p-6">
+                    <h3 class="text-2xl font-bold title-font mb-6 text-center">技能预览</h3>
+                    
+                    <!-- 技能卡片预览 -->
+                    <div class="mb-6">
+                        <div class="bg-white border-2 border-gold-accent rounded-lg p-4 shadow-lg">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-lg font-bold skill-font" id="previewName">技能名称</h4>
+                                <div class="text-sm text-gray-500" id="previewType">攻击类</div>
+                            </div>
+                            <p class="text-gray-700 mb-3" id="previewDescription">
+                                技能描述将在这里显示...
+                            </p>
+                            <div class="flex justify-between text-sm">
+                                <span>消耗: <span id="previewCost" class="font-bold text-cinnabar-red">2⚡</span></span>
+                                <span>冷却: <span id="previewCooldown" class="font-bold text-mist-blue">3回合</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 效果演示画布 -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-bold mb-3">效果演示</h4>
+                        <canvas id="previewCanvas" class="preview-canvas w-full h-64" width="400" height="256"></canvas>
+                        <div class="text-xs text-gray-500 mt-2 text-center">
+                            点击"预览效果"查看技能动画演示
+                        </div>
+                    </div>
+                    
+                    <!-- 技能统计 -->
+                    <div class="bg-white rounded-lg p-4 border border-gray-200">
+                        <h4 class="font-bold mb-3">技能统计</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span>强度指数:</span>
+                                <span id="strengthIndex" class="font-bold">--</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>使用难度:</span>
+                                <span id="difficultyIndex" class="font-bold">--</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>策略价值:</span>
+                                <span id="strategyIndex" class="font-bold">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技能库标签页 -->
+        <div id="library-tab" class="tab-content">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-2xl font-bold title-font">我的技能库</h3>
+                        <div class="flex space-x-2">
+                            <select class="form-input" id="filterType">
+                                <option value="all">所有类型</option>
+                                <option value="attack">攻击类</option>
+                                <option value="defense">防御类</option>
+                                <option value="control">控制类</option>
+                                <option value="special">特殊类</option>
+                            </select>
+                            <input type="text" class="form-input" placeholder="搜索技能..." id="searchSkills">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="skillLibrary">
+                        <!-- 技能卡片将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 平衡测试标签页 -->
+        <div id="balance-tab" class="tab-content">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-bold title-font mb-6">技能平衡测试</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-bold mb-4">选择测试技能</h4>
+                            <div class="space-y-2" id="testSkillsList">
+                                <!-- 测试技能列表 -->
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-bold mb-4">测试结果</h4>
+                            <div class="bg-gray-50 rounded-lg p-4" id="testResults">
+                                <div class="text-center text-gray-500 py-8">
+                                    选择一个技能开始测试
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技能详情模态框 -->
+    <div class="modal-overlay hidden" id="skillDetailModal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold title-font" id="detailSkillName">技能详情</h3>
+                <button onclick="closeSkillDetailModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="skillDetailContent">
+                <!-- 技能详情内容 -->
+            </div>
+            
+            <div class="flex space-x-3 mt-6">
+                <button class="action-button flex-1" onclick="editSkill()">
+                    编辑技能
+                </button>
+                <button class="action-button danger flex-1" onclick="deleteSkill()">
+                    删除技能
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 技能自定义系统
+        class SkillCustomizer {
+            constructor() {
+                this.customSkills = this.loadCustomSkills();
+                this.currentSkill = null;
+                this.initializeEventListeners();
+                this.updatePreview();
+            }
+            
+            loadCustomSkills() {
+                const saved = localStorage.getItem('custom_skills');
+                return saved ? JSON.parse(saved) : [];
+            }
+            
+            saveCustomSkills() {
+                localStorage.setItem('custom_skills', JSON.stringify(this.customSkills));
+            }
+            
+            initializeEventListeners() {
+                // 表单事件监听
+                document.getElementById('skillName').addEventListener('input', () => this.updatePreview());
+                document.getElementById('skillDescription').addEventListener('input', () => this.updatePreview());
+                document.getElementById('skillType').addEventListener('change', () => this.updatePreview());
+                
+                // 滑块事件监听
+                document.getElementById('energyCost').addEventListener('input', (e) => {
+                    document.getElementById('energyCostValue').textContent = e.target.value;
+                    this.updatePreview();
+                    this.updateBalance();
+                });
+                
+                document.getElementById('cooldown').addEventListener('input', (e) => {
+                    document.getElementById('cooldownValue').textContent = e.target.value;
+                    this.updatePreview();
+                    this.updateBalance();
+                });
+                
+                // 效果选项事件监听
+                document.querySelectorAll('.effect-option').forEach(option => {
+                    option.addEventListener('click', () => {
+                        const checkbox = option.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                        option.classList.toggle('selected', checkbox.checked);
+                        this.updatePreview();
+                        this.updateBalance();
+                    });
+                });
+            }
+            
+            updatePreview() {
+                const name = document.getElementById('skillName').value || '技能名称';
+                const description = document.getElementById('skillDescription').value || '技能描述将在这里显示...';
+                const type = document.getElementById('skillType').value;
+                const cost = document.getElementById('energyCost').value;
+                const cooldown = document.getElementById('cooldown').value;
+                
+                document.getElementById('previewName').textContent = name;
+                document.getElementById('previewDescription').textContent = description;
+                document.getElementById('previewType').textContent = this.getTypeText(type);
+                document.getElementById('previewCost').textContent = `${cost}⚡`;
+                document.getElementById('previewCooldown').textContent = `${cooldown}回合`;
+                
+                this.updateBalance();
+            }
+            
+            updateBalance() {
+                const cost = parseInt(document.getElementById('energyCost').value);
+                const cooldown = parseInt(document.getElementById('cooldown').value);
+                const selectedEffects = document.querySelectorAll('.effect-option.selected');
+                
+                // 简单的平衡性计算
+                let power = cost * 20 + selectedEffects.length * 15;
+                let balance = Math.max(0, Math.min(100, 50 + (cooldown * 10 - power) * 2));
+                
+                document.getElementById('balanceBar').style.width = `${balance}%`;
+                
+                const scoreElement = document.getElementById('balanceScore');
+                if (balance < 30) {
+                    scoreElement.textContent = '过强';
+                    scoreElement.className = 'text-sm font-bold text-cinnabar-red';
+                } else if (balance > 70) {
+                    scoreElement.textContent = '过弱';
+                    scoreElement.className = 'text-sm font-bold text-mist-blue';
+                } else {
+                    scoreElement.textContent = '平衡';
+                    scoreElement.className = 'text-sm font-bold text-bamboo-green';
+                }
+                
+                // 更新统计指数
+                document.getElementById('strengthIndex').textContent = Math.round(power / 10);
+                document.getElementById('difficultyIndex').textContent = Math.round(cost + selectedEffects.length);
+                document.getElementById('strategyIndex').textContent = Math.round(selectedEffects.length * 2 + cooldown / 2);
+            }
+            
+            getTypeText(type) {
+                const typeMap = {
+                    'attack': '攻击类',
+                    'defense': '防御类',
+                    'control': '控制类',
+                    'special': '特殊类',
+                    'chaos': '混乱类'
+                };
+                return typeMap[type] || '未知类型';
+            }
+            
+            saveSkill() {
+                const name = document.getElementById('skillName').value;
+                const description = document.getElementById('skillDescription').value;
+                const type = document.getElementById('skillType').value;
+                const cost = parseInt(document.getElementById('energyCost').value);
+                const cooldown = parseInt(document.getElementById('cooldown').value);
+                
+                // 验证输入
+                if (!name || name.length !== 4) {
+                    alert('技能名称必须为四字成语！');
+                    return;
+                }
+                
+                if (!description) {
+                    alert('请填写技能描述！');
+                    return;
+                }
+                
+                const selectedEffects = Array.from(document.querySelectorAll('.effect-option.selected'))
+                    .map(option => option.dataset.effect);
+                
+                if (selectedEffects.length === 0) {
+                    alert('请至少选择一个技能效果！');
+                    return;
+                }
+                
+                const skill = {
+                    id: 'custom_' + Date.now(),
+                    name: name,
+                    description: description,
+                    type: type,
+                    cost: cost,
+                    cooldown: cooldown,
+                    effects: selectedEffects,
+                    created: new Date().toISOString(),
+                    balance: this.calculateBalance(cost, cooldown, selectedEffects.length)
+                };
+                
+                this.customSkills.push(skill);
+                this.saveCustomSkills();
+                
+                alert('技能保存成功！');
+                this.clearForm();
+                this.updateSkillLibrary();
+            }
+            
+            calculateBalance(cost, cooldown, effectCount) {
+                let power = cost * 20 + effectCount * 15;
+                return Math.max(0, Math.min(100, 50 + (cooldown * 10 - power) * 2));
+            }
+            
+            clearForm() {
+                document.getElementById('skillName').value = '';
+                document.getElementById('skillDescription').value = '';
+                document.getElementById('skillType').value = 'attack';
+                document.getElementById('energyCost').value = '2';
+                document.getElementById('cooldown').value = '3';
+                document.getElementById('energyCostValue').textContent = '2';
+                document.getElementById('cooldownValue').textContent = '3';
+                
+                document.querySelectorAll('.effect-option').forEach(option => {
+                    option.classList.remove('selected');
+                    option.querySelector('input[type="checkbox"]').checked = false;
+                });
+                
+                this.updatePreview();
+            }
+            
+            updateSkillLibrary() {
+                const library = document.getElementById('skillLibrary');
+                library.innerHTML = '';
+                
+                if (this.customSkills.length === 0) {
+                    library.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-gray-500">
+                            <div class="text-4xl mb-4">🎯</div>
+                            <div>还没有自定义技能</div>
+                            <div class="text-sm">去创建你的第一个技能吧！</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                this.customSkills.forEach(skill => {
+                    const card = this.createSkillCard(skill);
+                    library.appendChild(card);
+                });
+            }
+            
+            createSkillCard(skill) {
+                const card = document.createElement('div');
+                card.className = 'skill-card';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-lg font-bold skill-font">${skill.name}</h4>
+                        <span class="text-xs px-2 py-1 bg-bamboo-green text-white rounded">${this.getTypeText(skill.type)}</span>
+                    </div>
+                    <p class="text-gray-700 text-sm mb-3">${skill.description}</p>
+                    <div class="flex justify-between text-xs text-gray-500 mb-3">
+                        <span>消耗: ${skill.cost}⚡</span>
+                        <span>冷却: ${skill.cooldown}回合</span>
+                        <span>平衡: ${Math.round(skill.balance)}%</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="flex-1 px-3 py-1 bg-bamboo-green text-white rounded text-sm hover:bg-opacity-90" onclick="viewSkillDetail('${skill.id}')">
+                            查看详情
+                        </button>
+                        <button class="px-3 py-1 bg-mist-blue text-white rounded text-sm hover:bg-opacity-90" onclick="editSkill('${skill.id}')">
+                            编辑
+                        </button>
+                    </div>
+                `;
+                return card;
+            }
+        }
+        
+        // 标签页切换
+        function switchTab(tabName) {
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有标签按钮的激活状态
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 显示选中的标签页内容
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // 激活对应的标签按钮
+            event.target.classList.add('active');
+            
+            // 如果是技能库标签页，更新技能列表
+            if (tabName === 'library') {
+                skillCustomizer.updateSkillLibrary();
+            }
+        }
+        
+        // 全局函数
+        function previewSkill() {
+            const canvas = document.getElementById('previewCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制简单的技能效果演示
+            ctx.fillStyle = '#f7f5f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制棋盘网格
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i <= 8; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * 50, 0);
+                ctx.lineTo(i * 50, 400);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i * 50);
+                ctx.lineTo(400, i * 50);
+                ctx.stroke();
+            }
+            
+            // 绘制示例棋子
+            const pieces = [
+                {x: 1, y: 1, color: 'black'},
+                {x: 2, y: 2, color: 'white'},
+                {x: 3, y: 3, color: 'black'},
+                {x: 4, y: 4, color: 'white'}
+            ];
+            
+            pieces.forEach(piece => {
+                const x = piece.x * 50 - 25;
+                const y = piece.y * 50 - 25;
+                
+                ctx.fillStyle = piece.color === 'black' ? '#000000' : '#ffffff';
+                ctx.beginPath();
+                ctx.arc(x, y, 15, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                if (piece.color === 'white') {
+                    ctx.strokeStyle = '#cccccc';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            });
+            
+            // 添加技能效果动画
+            let frame = 0;
+            const animate = () => {
+                frame++;
+                
+                // 简单的粒子效果
+                if (frame < 60) {
+                    ctx.fillStyle = `rgba(212, 175, 55, ${0.8 - frame / 60})`;
+                    ctx.beginPath();
+                    ctx.arc(200 + Math.sin(frame * 0.1) * 50, 128 + Math.cos(frame * 0.1) * 30, 5, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    requestAnimationFrame(animate);
+                }
+            };
+            
+            animate();
+        }
+        
+        function testSkill() {
+            const balance = document.getElementById('balanceScore').textContent;
+            let message = '';
+            
+            if (balance === '过强') {
+                message = '技能强度过高，建议增加能量消耗或冷却时间。';
+            } else if (balance === '过弱') {
+                message = '技能强度过低，建议减少能量消耗或冷却时间。';
+            } else {
+                message = '技能平衡性良好，可以投入使用。';
+            }
+            
+            alert(`平衡测试结果：${message}`);
+        }
+        
+        function saveSkill() {
+            skillCustomizer.saveSkill();
+        }
+        
+        function viewSkillDetail(skillId) {
+            const skill = skillCustomizer.customSkills.find(s => s.id === skillId);
+            if (!skill) return;
+            
+            document.getElementById('detailSkillName').textContent = skill.name;
+            document.getElementById('skillDetailContent').innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h5 class="font-bold mb-2">技能描述</h5>
+                        <p class="text-gray-700">${skill.description}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h6 class="font-bold text-sm text-gray-600">技能类型</h6>
+                            <p>${skillCustomizer.getTypeText(skill.type)}</p>
+                        </div>
+                        <div>
+                            <h6 class="font-bold text-sm text-gray-600">平衡性</h6>
+                            <p>${Math.round(skill.balance)}%</p>
+                        </div>
+                        <div>
+                            <h6 class="font-bold text-sm text-gray-600">能量消耗</h6>
+                            <p>${skill.cost} 点</p>
+                        </div>
+                        <div>
+                            <h6 class="font-bold text-sm text-gray-600">冷却时间</h6>
+                            <p>${skill.cooldown} 回合</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="font-bold mb-2">技能效果</h5>
+                        <div class="flex flex-wrap gap-2">
+                            ${skill.effects.map(effect => `
+                                <span class="px-2 py-1 bg-bamboo-green text-white rounded text-sm">
+                                    ${effect}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="font-bold text-sm text-gray-600">创建时间</h6>
+                        <p>${new Date(skill.created).toLocaleDateString('zh-CN')}</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('skillDetailModal').classList.remove('hidden');
+        }
+        
+        function editSkill(skillId) {
+            alert('编辑功能开发中...');
+        }
+        
+        function deleteSkill(skillId) {
+            if (confirm('确定要删除这个技能吗？')) {
+                skillCustomizer.customSkills = skillCustomizer.customSkills.filter(s => s.id !== skillId);
+                skillCustomizer.saveCustomSkills();
+                skillCustomizer.updateSkillLibrary();
+                closeSkillDetailModal();
+            }
+        }
+        
+        function closeSkillDetailModal() {
+            document.getElementById('skillDetailModal').classList.add('hidden');
+        }
+        
+        // 初始化
+        let skillCustomizer;
+        document.addEventListener('DOMContentLoaded', () => {
+            skillCustomizer = new SkillCustomizer();
+        });
+    </script>
+</body>
+</html>

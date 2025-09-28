@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋技能系统 - 古韵新风</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500;700&family=ZCOOL+KuaiLe&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink-black: #1a1a1a;
+            --paper-white: #faf9f6;
+            --bamboo-green: #2d5016;
+            --cinnabar-red: #b22222;
+            --gold-accent: #d4af37;
+            --shadow-gray: #4a4a4a;
+            --mist-blue: #6b7d8c;
+            --warm-ivory: #f7f5f0;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, var(--paper-white) 0%, #f0ede8 100%);
+            color: var(--ink-black);
+            min-height: 100vh;
+        }
+        
+        .title-font {
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+        
+        .skill-font {
+            font-family: 'ZCOOL XiaoWei', serif;
+        }
+        
+        .game-title {
+            background: linear-gradient(45deg, var(--gold-accent), #b8860b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .board-container {
+            background: linear-gradient(45deg, #8b7355 0%, #a0845c 100%);
+            border: 8px solid var(--ink-black);
+            border-radius: 12px;
+            box-shadow: 
+                inset 0 0 20px rgba(0,0,0,0.3),
+                0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .board-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--ink-black);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .board-cell:hover {
+            background-color: rgba(212, 175, 55, 0.2);
+        }
+        
+        .piece {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .piece.black {
+            background: radial-gradient(circle at 30% 30%, #333, #000);
+            border: 1px solid #333;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .piece.white {
+            background: radial-gradient(circle at 30% 30%, #fff, #e8e8e8);
+            border: 1px solid #ccc;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .skill-button {
+            background: linear-gradient(135deg, var(--gold-accent), #b8860b);
+            border: 2px solid var(--ink-black);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .skill-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        
+        .skill-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .skill-button.on-cooldown {
+            filter: grayscale(0.7);
+            opacity: 0.6;
+        }
+        
+        .energy-bar {
+            background: linear-gradient(90deg, var(--gold-accent), #b8860b);
+            height: 8px;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .cooldown-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .player-info {
+            background: var(--warm-ivory);
+            border: 2px solid var(--bamboo-green);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .game-status {
+            background: linear-gradient(135deg, var(--bamboo-green), #3d6b1e);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+            margin: 16px 0;
+        }
+        
+        .victory-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .victory-content {
+            background: var(--warm-ivory);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 4px solid var(--gold-accent);
+        }
+        
+        .preview-piece {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .winning-piece {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .particle-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--gold-accent);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .background-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+            }
+            
+            .skill-panel {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 120px;
+                overflow-x: auto;
+                background: var(--warm-ivory);
+                border-top: 2px solid var(--bamboo-green);
+                padding: 8px;
+                display: flex;
+                gap: 8px;
+            }
+            
+            .skill-button {
+                min-width: 80px;
+                padding: 8px;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景粒子效果容器 -->
+    <div class="background-pattern" id="backgroundPattern"></div>
+    
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg border-b-2 border-bamboo-green">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold title-font game-title">五子棋·技能系统</h1>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="index.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-bamboo-green hover:bg-gray-100">游戏对战</a>
+                    <a href="custom-skills.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-bamboo-green hover:bg-gray-100">技能自定义</a>
+                    <a href="tutorial.html" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-bamboo-green hover:bg-gray-100">游戏教程</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主游戏区域 -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="game-container flex gap-8">
+            
+            <!-- 左侧玩家信息面板 -->
+            <div class="w-64 space-y-4">
+                <!-- 黑方信息 -->
+                <div class="player-info">
+                    <h3 class="text-lg font-bold text-center mb-3">黑方玩家</h3>
+                    <div class="space-y-2">
+                        <div class="text-sm text-gray-600">能量值</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="energy-bar h-2 rounded-full" id="blackEnergy" style="width: 60%"></div>
+                        </div>
+                        <div class="text-xs text-gray-500" id="blackEnergyText">3 / 5</div>
+                    </div>
+                </div>
+                
+                <!-- 白方信息 -->
+                <div class="player-info">
+                    <h3 class="text-lg font-bold text-center mb-3">白方玩家</h3>
+                    <div class="space-y-2">
+                        <div class="text-sm text-gray-600">能量值</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="energy-bar h-2 rounded-full" id="whiteEnergy" style="width: 60%"></div>
+                        </div>
+                        <div class="text-xs text-gray-500" id="whiteEnergyText">3 / 5</div>
+                    </div>
+                </div>
+                
+                <!-- 游戏状态 -->
+                <div class="game-status" id="gameStatus">
+                    黑方回合 - 请落子
+                </div>
+                
+                <!-- 游戏控制 -->
+                <div class="space-y-2">
+                    <button class="w-full px-4 py-2 bg-bamboo-green text-white rounded-md hover:bg-opacity-90 transition-colors" onclick="gameManager.restartGame()">
+                        重新开始
+                    </button>
+                    <button class="w-full px-4 py-2 bg-mist-blue text-white rounded-md hover:bg-opacity-90 transition-colors" onclick="gameManager.undoMove()">
+                        悔棋
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 中央棋盘区域 -->
+            <div class="flex-1 flex justify-center">
+                <div class="board-container relative">
+                    <canvas id="gameBoard" width="450" height="450" class="cursor-pointer"></canvas>
+                    <div class="particle-container" id="particleContainer"></div>
+                </div>
+            </div>
+            
+            <!-- 右侧技能面板 -->
+            <div class="w-80" id="skillPanelDesktop">
+                <div class="bg-warm-ivory border-2 border-bamboo-green rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-center mb-4 skill-font">技能系统</h3>
+                    <div class="space-y-3" id="skillList">
+                        <!-- 技能按钮将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 移动端技能面板 -->
+        <div class="skill-panel md:hidden" id="skillPanelMobile">
+            <div class="flex gap-2" id="skillListMobile">
+                <!-- 技能按钮将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 胜利模态框 -->
+    <div class="victory-modal hidden" id="victoryModal">
+        <div class="victory-content">
+            <h2 class="text-3xl font-bold title-font mb-4" id="victoryTitle">恭喜获胜！</h2>
+            <p class="text-lg mb-6" id="victoryMessage">黑方玩家获得了胜利！</p>
+            <div class="space-x-4">
+                <button class="px-6 py-3 bg-bamboo-green text-white rounded-lg hover:bg-opacity-90 transition-colors" onclick="gameManager.restartGame()">
+                    再来一局
+                </button>
+                <button class="px-6 py-3 bg-mist-blue text-white rounded-lg hover:bg-opacity-90 transition-colors" onclick="gameManager.closeVictoryModal()">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技能使用提示 -->
+    <div class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-bamboo-green text-white px-4 py-2 rounded-lg shadow-lg z-50 hidden" id="skillUsageTip">
+        <div class="text-center">
+            <div class="font-bold" id="skillTipName">技能名称</div>
+            <div class="text-sm" id="skillTipDescription">技能描述</div>
+            <div class="text-xs mt-1">点击棋盘上的目标位置使用技能</div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
